@@ -17,10 +17,10 @@ public class LameUtil {
 	 * @param outBitrate
 	 *            brate compression ratio in KHz.
 	 * @param quality
-	 *            <p>quality=0..9. 0=best (very slow). 9=worst.</p>
-	 *            <p>recommended:</p>
-	 *            <p>2 near-best quality, not too slow</p>
-	 *            <p>5 good quality, fast</p>
+	 *            quality=0..9. 0=best (very slow). 9=worst.<br />
+	 *            recommended:<br />
+	 *            2 near-best quality, not too slow<br />
+	 *            5 good quality, fast<br />
 	 *            7 ok quality, really fast
 	 */
 	public native static void init(int inSamplerate, int inChannel,
@@ -29,19 +29,19 @@ public class LameUtil {
 	/**
 	 * Encode buffer to mp3.
 	 * 
-	 * @param bufferLeft
+	 * @param buffer_l
 	 *            PCM data for left channel.
-	 * @param bufferRight
+	 * @param buffer_r
 	 *            PCM data for right channel.
-	 * @param samples
+	 * @param sambles
 	 *            number of samples per channel.
 	 * @param mp3buf
 	 *            result encoded MP3 stream. You must specified
 	 *            "7200 + (1.25 * buffer_l.length)" length array.
-	 * @return <p>number of bytes output in mp3buf. Can be 0.</p>
-	 *         <p>-1: mp3buf was too small</p>
-	 *         <p>-2: malloc() problem</p>
-	 *         <p>-3: lame_init_params() not called</p>
+	 * @return number of bytes output in mp3buf. Can be 0.<br />
+	 *         -1: mp3buf was too small<br />
+	 *         -2: malloc() problem<br />
+	 *         -3: lame_init_params() not called<br />
 	 *         -4: psycho acoustic problems
 	 */
 	public native static int encode(short[] bufferLeft, short[] bufferRight,
