@@ -214,3 +214,7 @@ android.useDeprecatedNdk=true
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+    
+    # todo 
+    音量数据的实时传出(用户绘制波形),
+    参考  https://github.com/CarGuo/RecordWave
