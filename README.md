@@ -114,6 +114,9 @@ public void onMessageEvent(AudioNoPermissionEvent event) {
 
 ## 集成到项目中
 
+## 注意
+ 如果是直接拷贝代码放到你的model中,因为涉及到jni,那么库中的包名路径一个字都不能改,必须全路径拷贝,否则会报找不到so文件的错误.
+
 ## gradle
 
 **Step 1.** Add the JitPack repository to your build file
@@ -145,7 +148,7 @@ lastest release:https://github.com/hss01248/AndroidMP3Recorder/releases
 
 # 3. 关于音量部分的解释
 音量的计算，来自于 [三星开发者文档-Displaying Sound Volume in Real-Time While Recording](http://developer.samsung.com/technical-doc/view.do?v=T000000086)    
-~~里面对于音量的最大值设置为了4000，而我实际测验中发现大部分声音不超过2000，所以就在代码中暂时设置为2000。 
+里面对于音量的最大值设置为了4000，而我实际测验中发现大部分声音不超过2000，所以就在代码中暂时设置为2000。 
 这方面没有找到相关资料，如果有人知道理论值之类的，请联系我(chentong.think@gmail.com) (原库作者)完善此库，谢谢。
 
 # 4. 关于so库的声明
