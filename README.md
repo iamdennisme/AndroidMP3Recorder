@@ -82,7 +82,8 @@ public interface Callback {
 
 ## 权限
 
-示例:
+6.0及以上示例:
+> 注意,6.0以下的系统,RxPermissions返回的都是有权限,拿不到真实的情况,所以要用下面的AudioNoPermissionEvent事件来判断.
 
 ```
 new RxPermissions(this)
