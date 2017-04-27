@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,6 +15,9 @@ import android.widget.Toast;
 import com.czt.mp3recorder.AudioNoPermissionEvent;
 import com.czt.mp3recorder.Mp3Recorder;
 import com.czt.mp3recorder.Mp3RecorderUtil;
+import com.orhanobut.logger.LogPrintStyle;
+import com.orhanobut.logger.Logger;
+import com.orhanobut.logger.Settings;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.greenrobot.eventbus.EventBus;
@@ -25,6 +29,7 @@ import java.io.File;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import es.dmoral.toasty.MyToast;
 import io.reactivex.functions.Consumer;
 
 public class MainActivity extends Activity {
@@ -53,6 +58,24 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
+        Logger.initialize(
+                new Settings()
+                        .setStyle(new LogPrintStyle())
+                        .isShowMethodLink(true)
+                        .isShowThreadInfo(false)
+                        .setMethodOffset(0)
+                        .setLogPriority(BuildConfig.DEBUG ? Log.VERBOSE : Log.ASSERT)
+        );
+        MyToast.init(getApplicationContext(),true,true);
+
+
+
+
+
+
+
+
+
         //player = new MediaPlayer();
         //Button startButton = (Button) findViewById(R.id.StartButton);
 
@@ -176,7 +199,7 @@ public class MainActivity extends Activity {
         EventBus.getDefault().unregister(this);
     }
 
-    @OnClick({R.id.btn_start, R.id.btn_pause, R.id.btn_resume, R.id.btn_stop, R.id.btn_reset, R.id.btn_play})
+    @OnClick({R.id.btn_start, R.id.btn_pause, R.id.btn_resume, R.id.btn_stop, R.id.btn_reset, R.id.btn_play,R.id.btn_play_other})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_start:
@@ -193,6 +216,9 @@ public class MainActivity extends Activity {
                 break;
             case R.id.btn_reset:
                 mRecorder.reset();
+                break;
+            case R.id.btn_play_other:
+               startActivity(new Intent(this,PlayerActy.class));
                 break;
             case R.id.btn_play:
                 Intent mIntent = new Intent();
