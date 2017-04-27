@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
                             init();
                         }else {
                             toast("权限被拒绝了");
+                            init();
                         }
                     }
                 });
@@ -100,6 +101,12 @@ public class MainActivity extends Activity {
 
     public void toast(String msg){
         Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+       // mRecorder.cancel();
     }
 
     private void init() {
@@ -110,12 +117,21 @@ public class MainActivity extends Activity {
         mRecorder.setOutputFile(path)
                 .setMaxDuration(30)//30s
                 .setCallback(new Mp3Recorder.Callback() {
-                            @Override
+                           /* @Override
                             public void onRecording(double duration) {
                                 tvProgress.setText( String.format("%d分%d秒",(int)(duration/1000/60),(int)(duration/1000%60))+"---"+duration );
-                            }
+                            }*/
 
-                            @Override
+                    @Override
+                    public void onRecording(double duration, double volume) {
+                        String str = "";
+                        str = String.format("duration:\n"+"%d分%d秒",(int)(duration/1000/60),(int)(duration/1000%60))+"---"+duration+"\n"
+                                + "分贝值:\n"+volume;
+                        tvProgress.setText(str);
+
+                    }
+
+                    @Override
                             public void onStart() {
                                 toast("开始了....");
 

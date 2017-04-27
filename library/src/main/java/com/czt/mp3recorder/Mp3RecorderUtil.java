@@ -11,6 +11,10 @@ import android.widget.Toast;
 
 public class Mp3RecorderUtil {
 
+    public static Context getContext() {
+        return context;
+    }
+
     private static  Context context;
 
      static boolean isDebug() {

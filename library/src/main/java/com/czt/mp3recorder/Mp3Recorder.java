@@ -69,18 +69,26 @@ public class Mp3Recorder {
 
 
     public void start(){
-        audioRecorder = new AudioRecorder(new File(outputFilePath),this);
-        audioRecorder.setCallback(mStateListener);
-        audioRecorder.setMaxDuration(mMaxDuration);
-        audioRecorder.start();
-        state = State.PREPARED;
-        audioRecorder.startRecording();
+        if(state == State.INITIALIZED ||
+                state == State.STOPPED || state == State.PREPARED
+                || state == State.UNINITIALIZED){
+            audioRecorder = new AudioRecorder(new File(outputFilePath),this);
+            audioRecorder.setCallback(mStateListener);
+            audioRecorder.setMaxDuration(mMaxDuration);
+            audioRecorder.start();
+            state = State.PREPARED;
+            audioRecorder.startRecording();
+        }else if(state ==State.PAUSED){
+            resume();
+        }
+
+        //state = State.RECORDING;
 
     }
 
 
     /**
-     * 只供AudioRecorder调用
+     * 只供AudioRecorder调用,真正的开始
      */
      void onstart(){
         if(state == State.PREPARED){
@@ -91,8 +99,16 @@ public class Mp3Recorder {
         }
     }
 
+   /* public void cancel(){
+        if(state!=State.UNINITIALIZED || state != State.STOPPED){
+           if(audioRecorder!=null){
+               audioRecorder.stopRecord();
+           }
+        }
+    }*/
+
     public void pause(){
-        if (audioRecorder != null){
+        if (audioRecorder != null && state == State.RECORDING){
             audioRecorder.pauseRecord();
             state = State.PAUSED;
             if (mStateListener != null){
@@ -103,7 +119,7 @@ public class Mp3Recorder {
     }
 
     public void resume(){
-        if (audioRecorder != null){
+        if (audioRecorder != null && state == State.PAUSED){
             audioRecorder.resumeRecord();
             state = State.RECORDING;
             if (mStateListener != null){
@@ -114,7 +130,7 @@ public class Mp3Recorder {
     }
 
     public void stop(int action){
-        if (audioRecorder != null){
+        if (audioRecorder != null && state == State.RECORDING){
             audioRecorder.stopRecord();
 
             state = State.STOPPED;
@@ -164,7 +180,15 @@ public class Mp3Recorder {
         void onStop(int action);
         void onReset();
 
-        void onRecording(double duration);
+        /*@Deprecated
+        void onRecording(double duration);*/
+
+        /**
+         *
+         * @param duration 过了多长时间
+         * @param volume 这个时间的段的分贝值
+         */
+        void onRecording(double duration,double volume);
         void onMaxDurationReached();
     }
 

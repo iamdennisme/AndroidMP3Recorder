@@ -75,7 +75,7 @@ public interface Callback {
     void onStop(int action);
     void onReset();
 
-    void onRecording(double duration);
+    void onRecording(double duration,double volume);//已经录制的时间,实时音量分贝值
     void onMaxDurationReached();
 }
 ```
@@ -96,13 +96,16 @@ new RxPermissions(this)
                     init();
                 }else {
                     toast("权限被拒绝了");
+                     init();
                 }
             }
         });
 ```
 
 > 6.0以下时,各家rom对权限的管理不统一.这里直接深入音频录制流中进行判断,并在没有权限时用eventbus来post一个AudioNoPermissionEvent.调用者只要接收并处理就行. 这样就规避了各家rom的不同.
->
+
+
+
 > AudioNoPermissionEvent 接收示例:
 
 ```
@@ -111,6 +114,24 @@ public void onMessageEvent(AudioNoPermissionEvent event) {
     toast("没有录音权限,无法录音,赶紧去设置吧");
 }
 ```
+
+> 说明: 小米和三星手机,没有权限时,马上能够收到AudioNoPermissionEvent.
+
+
+
+> 华为手机没有权限时,没有任何地方能够捕捉到,只能通过下面的方式来发出:
+
+
+
+调用audioRecord.startRecording()之前,用handler发出一个延时n秒的runnable,在真正进入录制的时候,取消这个runnable.如果这个runnable最终执行了,那么说明在给定的n秒内,没有获取到权限.
+
+n的取值:第一次调用mp3recorder.start()时,为10s,再次调用时,为1s
+
+ ![huaweipermission](huaweipermission.png)
+
+
+
+
 
 ## 集成到项目中
 
@@ -218,7 +239,7 @@ android.useDeprecatedNdk=true
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-    
+
     # todo 
     音量数据的实时传出(用户绘制波形),
     参考  https://github.com/CarGuo/RecordWave

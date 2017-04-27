@@ -3,9 +3,11 @@ package com.czt.mp3recorder;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Handler;
 import android.os.Message;
 
 import com.czt.mp3recorder.util.LameUtil;
+import com.czt.mp3recorder.util.SP;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -58,10 +60,34 @@ public class AudioRecorder extends Thread {
     private double mDuration;//录音时间,单位为毫秒
     private Mp3Recorder.Callback mDurationListener;
     Mp3Recorder mMyMp3Recorder;
+    boolean reallyStart;
+    Handler handler;
+    Runnable sendNoPermission;
+    int waitingTime;
+    boolean havePermission;
 
     public AudioRecorder(File file, Mp3Recorder myMp3Recorder) {
         outputFile = file;
         mMyMp3Recorder = myMp3Recorder;
+        handler = new Handler();
+
+        if(myMp3Recorder.getRecorderState() == Mp3Recorder.State.PREPARED){
+            waitingTime = 1000;
+        }else {
+            waitingTime = 10000;
+        }
+        havePermission = SP.getBoolean("mp3permission",true);
+        if(!havePermission){
+            waitingTime = 1000;
+        }
+        sendNoPermission = new Runnable() {
+            @Override
+            public void run() {
+                EventBus.getDefault().post(new AudioNoPermissionEvent());
+                SP.setBoolean("mp3permission",false);
+                Log.e(waitingTime/1000+"s等待时间已到,么有权限:" );
+            }
+        };
     }
 
     public void setCallback(Mp3Recorder.Callback mDurationListener){
@@ -84,6 +110,9 @@ public class AudioRecorder extends Thread {
     public void stopRecord(){
         mShouldRecord = false;
         mShouldRun = false;
+       /* if(handler!=null && sendNoPermission!=null){
+            handler.removeCallbacks(sendNoPermission);
+        }*/
         if(audioRecord != null){
             audioRecord.stop();
             audioRecord.release();
@@ -107,6 +136,10 @@ public class AudioRecorder extends Thread {
         }
     }
 
+    private void cancel(){
+        stopRecord();
+    }
+
     public int getDuration(){
         return (int)mDuration;
     }
@@ -117,6 +150,7 @@ public class AudioRecorder extends Thread {
         if(!isFound()){
             Log.e(TAG, "Sample rate, channel config or format not supported!");
             EventBus.getDefault().post(new AudioNoPermissionEvent());
+            //SP.setBoolean("mp3permission",false);
             return;
         }
         init();
@@ -130,9 +164,19 @@ public class AudioRecorder extends Thread {
                 if(mShouldRecord){
                     //监测8s内音频振幅大小,以判断是否拿到录音权限,还是空文件
                     startTime = System.currentTimeMillis();
-                    Log.e("分贝值time:" + startTime);
-                    audioRecord.startRecording();//调用本地录音方法,如果有权限管理软件,会向系统申请权限
-                  //  getNoiseLevel();//获取15s内分贝值大小
+                    Log.e("开始调用系统录音audioRecord.startRecording()  时间:" + startTime);
+                    try {
+                        handler.postDelayed(sendNoPermission,waitingTime);
+                        audioRecord.startRecording();//调用本地录音方法,如果有权限管理软件,会向系统申请权限
+
+                    }catch (Exception e){
+                        EventBus.getDefault().post(new AudioNoPermissionEvent());
+                        //SP.setBoolean("mp3permission",false);
+                    }
+
+
+                   //getNoiseLevel();//获取15s内分贝值大小
+
 
                 }else{
                     audioRecord.stop();
@@ -145,21 +189,31 @@ public class AudioRecorder extends Thread {
                 if (readSize > 0) {
                     final double read_ms = (1000.0 * readSize * 2) / bytesPerSecond;
                     if (mDuration == 0 ){
+                        reallyStart = true;
+                        if(handler!=null){
+                            handler.removeCallbacks(sendNoPermission);
+                        }
+                        Log.e("拿到权限,真正开始录音" );
+                        SP.setBoolean("mp3permission",true);
                         Mp3RecorderUtil.postTaskSafely(new Runnable() {
                             @Override
                             public void run() {
                                    // mDurationListener.onReallyStart();//真正开始
                                 mMyMp3Recorder.onstart();
+
                             }
                         });
 
                     }
+                    final double volume = calVolume(mPCMBuffer,readSize);
+
                     mDuration += read_ms;
                     if (mDurationListener != null){
                         Mp3RecorderUtil.postTaskSafely(new Runnable() {
                             @Override
                             public void run() {
-                                mDurationListener.onRecording(mDuration);
+                                //mDurationListener.onRecording(mDuration);
+                                mDurationListener.onRecording(mDuration,volume);
                                 if(maxDuration >0 && mDuration >= maxDuration){
                                     mMyMp3Recorder.stop(Mp3Recorder.ACTION_STOP_ONLY);
                                     mDurationListener.onMaxDurationReached();
@@ -193,6 +247,18 @@ public class AudioRecorder extends Thread {
                 }
             }
         }
+    }
+
+    private double calVolume(short[] buffer, double readSize) {
+        long v = 0;
+        // 将 buffer 内容取出，进行平方和运算
+        for (int i = 0; i < buffer.length; i++) {
+            v += buffer[i] * buffer[i];
+        }
+        // 平方和除以数据总长度，得到音量大小。
+        double mean = v / readSize;
+        double volume = 10 * Math.log10(mean);
+        return volume;
     }
 
 
@@ -342,6 +408,7 @@ public class AudioRecorder extends Thread {
                         if (duration >9000 ){
                             Mp3RecorderUtil.showDebugToast("v ==0,没有拿到权限");
                             EventBus.getDefault().post(new AudioNoPermissionEvent());
+
                         }
                     }
                     Log.d(TAG, "分贝值v:" + v);

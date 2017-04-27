@@ -14,18 +14,18 @@ public class Log {
     }
     public static void e(String tag,String msg){
         if(Mp3RecorderUtil.isDebug()){
-            android.util.Log.e(tag,msg);
+            android.util.Log.e("mp3recoder",msg);
         }
     }
     public static void i(String tag,String msg){
         if(Mp3RecorderUtil.isDebug()){
-            android.util.Log.i(tag,msg);
+            android.util.Log.i("mp3recoder",msg);
         }
     }
 
     public static void d(String tag,String msg){
         if(Mp3RecorderUtil.isDebug()){
-            android.util.Log.d(tag,msg);
+            android.util.Log.d("mp3recoder",msg);
         }
     }
 }
