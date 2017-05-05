@@ -1,6 +1,11 @@
 package com.czt.mp3recorder;
 
+import android.content.Context;
+import android.media.AudioManager;
+
 import java.io.File;
+
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT;
 
 /**
  * Created by hss01248 on 12/29/2015.
@@ -16,6 +21,9 @@ public class Mp3Recorder {
     public static final    int ACTION_STOP_AND_NEXT =2;
     public static final    int ACTION_STOP_ONLY =3;
     Callback mStateListener;
+    AudioManager am;
+    AudioManager.OnAudioFocusChangeListener listener;
+    int stateBeforeFocusChange;
 
     public class State {
         public static final int UNINITIALIZED = -1;
@@ -41,6 +49,34 @@ public class Mp3Recorder {
      */
     public Mp3Recorder(){
         //mHandler = new Handler(this);
+        am = (AudioManager) Mp3RecorderUtil.getContext().getSystemService(Context.AUDIO_SERVICE);
+        listener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int focusChange) {
+                if (focusChange == AUDIOFOCUS_LOSS_TRANSIENT){
+                    //Log.e("dd"," AUDIOFOCUS_LOSS_TRANSIENT ---------------------");
+                    if(state == State.RECORDING){
+                        stateBeforeFocusChange = State.RECORDING;
+                    }
+                    pause();
+                    // Pause playback
+                } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                    //Log.e("dd"," AUDIOFOCUS_GAIN ---------------------");
+                    if(stateBeforeFocusChange == State.RECORDING){
+                       resume();
+                    }
+
+                    // Resume playback
+                } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                    //Log.e("dd"," AUDIOFOCUS_LOSS ---------------------");
+                    //am.unregisterMediaButtonEventReceiver(RemoteControlReceiver);
+
+                    //instance.stop();
+                    // Stop playback
+                }
+
+            }
+        };
     }
 
     public int getmMaxDuration() {
@@ -93,6 +129,11 @@ public class Mp3Recorder {
      void onstart(){
         if(state == State.PREPARED){
             state = State.RECORDING;
+            int result = am.requestAudioFocus(listener,
+                    // Use the music stream.
+                    AudioManager.STREAM_MUSIC,
+                    // Request permanent focus.
+                    AudioManager.AUDIOFOCUS_GAIN);
             if (mStateListener != null){
                 mStateListener.onStart();
             }
@@ -132,6 +173,7 @@ public class Mp3Recorder {
     public void stop(int action){
         if (audioRecorder != null && state == State.RECORDING){
             audioRecorder.stopRecord();
+            am.abandonAudioFocus(listener);
 
             state = State.STOPPED;
             if (mStateListener != null){
