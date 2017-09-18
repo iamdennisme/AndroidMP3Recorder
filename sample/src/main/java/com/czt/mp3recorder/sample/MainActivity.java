@@ -3,9 +3,7 @@ package com.czt.mp3recorder.sample;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -79,7 +77,8 @@ public class MainActivity extends Activity {
         //player = new MediaPlayer();
         //Button startButton = (Button) findViewById(R.id.StartButton);
 
-        path = new File(Environment.getExternalStorageDirectory(), "test.mp3").getAbsolutePath();
+        //path = new File(Environment.getExternalStorageDirectory(), "test.mp3").getAbsolutePath();
+        path = new File(getFilesDir(), "test.mp3").getAbsolutePath();
 
         askPermission();
 
@@ -221,11 +220,63 @@ public class MainActivity extends Activity {
                startActivity(new Intent(this,PlayerActy.class));
                 break;
             case R.id.btn_play:
-                Intent mIntent = new Intent();
+                /*Intent mIntent = new Intent();
                 Uri uri = Uri.fromFile(new File(path));
                 mIntent.setAction(android.content.Intent.ACTION_VIEW);
                 mIntent.setDataAndType(uri , "audio/mp3");
-                startActivity(mIntent);
+                startActivity(mIntent);*/
+                AudioPlayerManager.get().setDataSource(path).setCallback(new PlayerCallback() {
+                    @Override
+                    public void onPreparing(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onPlaying(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onPause(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onFinished(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onStop(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onError(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onProgress(int progress, Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onSeeking(Object dataSource, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onBufferingUpdate(int percent, AudioPlayerManager manager) {
+
+                    }
+
+                    @Override
+                    public void onGetMaxDuration(int maxDuration) {
+
+                    }
+                }).start();
+
                 break;
         }
     }

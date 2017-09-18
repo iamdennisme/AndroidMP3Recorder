@@ -160,7 +160,7 @@ public class AudioRecorder extends Thread {
         int bytesPerSecond = audioRecord.getSampleRate() * mapFormat(audioRecord.getAudioFormat()) / 8 * audioRecord.getChannelCount();
         mDuration = 0.0;
         while (mShouldRun) {
-            if(mShouldRecord != oldShouldRecord){
+            if(mShouldRecord != oldShouldRecord){//只有状态切换的那一次会走这里
                 if(mShouldRecord){
                     //监测8s内音频振幅大小,以判断是否拿到录音权限,还是空文件
                     startTime = System.currentTimeMillis();
@@ -169,10 +169,32 @@ public class AudioRecorder extends Thread {
                         handler.postDelayed(sendNoPermission,waitingTime);
                         audioRecord.startRecording();//调用本地录音方法,如果有权限管理软件,会向系统申请权限
 
+                        //没有异常,就是拿到了权限
+                        if(handler!=null){//点击恢复时也会走这里
+                            handler.removeCallbacks(sendNoPermission);
+                        }
+                        if (mDuration == 0 ){//第一次点击开始录音
+                            reallyStart = true;
+                            Log.e("拿到权限,真正开始录音" );
+                            SP.setBoolean("mp3permission",true);
+                            Mp3RecorderUtil.postTaskSafely(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // mDurationListener.onReallyStart();//真正开始
+                                    mMyMp3Recorder.onstart();
+                                }
+                            });
+                        }
+
+
                     }catch (Exception e){
+                        Log.e("没有拿到权限：系统录音audioRecord.startRecording() 异常  :" );
+                        e.printStackTrace();
                         EventBus.getDefault().post(new AudioNoPermissionEvent());
                         //SP.setBoolean("mp3permission",false);
                     }
+
+
 
 
                    //getNoiseLevel();//获取15s内分贝值大小
@@ -188,23 +210,7 @@ public class AudioRecorder extends Thread {
                 int readSize = audioRecord.read(mPCMBuffer, 0, bufsize);
                 if (readSize > 0) {
                     final double read_ms = (1000.0 * readSize * 2) / bytesPerSecond;
-                    if (mDuration == 0 ){
-                        reallyStart = true;
-                        if(handler!=null){
-                            handler.removeCallbacks(sendNoPermission);
-                        }
-                        Log.e("拿到权限,真正开始录音" );
-                        SP.setBoolean("mp3permission",true);
-                        Mp3RecorderUtil.postTaskSafely(new Runnable() {
-                            @Override
-                            public void run() {
-                                   // mDurationListener.onReallyStart();//真正开始
-                                mMyMp3Recorder.onstart();
 
-                            }
-                        });
-
-                    }
                     final double volume = calVolume(mPCMBuffer,readSize);
 
                     mDuration += read_ms;
