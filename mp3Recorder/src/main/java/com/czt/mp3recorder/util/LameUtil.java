@@ -58,7 +58,7 @@ public class LameUtil {
      */
     public native static int flush(byte[] mp3buf);
 
-    public native static void wav2Mp3(String wavFile, String mp3File, int inSamplerate, int inChannel, int outBitrate);
+    public native static boolean wav2Mp3(String wavFile, String mp3File, int inSamplerate, int inChannel, int outBitrate);
 
     /**
      * Close LAME.
