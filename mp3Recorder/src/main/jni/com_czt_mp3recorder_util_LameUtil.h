@@ -31,6 +31,9 @@ JNIEXPORT jint JNICALL Java_com_czt_mp3recorder_util_LameUtil_encode
 JNIEXPORT jint JNICALL Java_com_czt_mp3recorder_util_LameUtil_flush
   (JNIEnv *, jclass, jbyteArray);
 
+JNIEXPORT jboolean JNICALL Java_com_czt_mp3recorder_util_LameUtil_wav2Mp3
+(JNIEnv * , jobject , jstring , jstring , jint , jint , jint);
+
 /*
  * Class:     com_czt_mp3recorder_util_LameUtil
  * Method:    close
