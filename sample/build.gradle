@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 29
     buildToolsVersion "25.0.0"
 
     defaultConfig {
         applicationId "com.czt.mp3recorder.sample"
         minSdkVersion 15
-        targetSdkVersion 25
+        targetSdkVersion 29
     }
 
     buildTypes {
@@ -21,10 +21,5 @@ android {
 dependencies {
     compile project(':mp3Recorder')
     //compile 'com.android.support:support-v7:25.0.0'
-    compile 'com.jakewharton:butterknife:7.0.1'
-    compile 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar'
-    compile 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    compile 'com.github.hss01248:Toasty:2.0.1'
-    compile 'com.github.tianzhijiexian:logger:1.1.9'
     compile 'com.jakewharton.timber:timber:4.5.1'
 }
