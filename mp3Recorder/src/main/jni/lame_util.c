@@ -1,4 +1,4 @@
-#include "lame_3.99.5_libmp3lame/lame.h"
+#include "lame-3.100/lame.h"
 #include "com_czt_mp3recorder_util_LameUtil.h"
 #include <stdio.h>
 #include <jni.h>
