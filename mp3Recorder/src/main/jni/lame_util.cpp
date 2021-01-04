@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <jni.h>
 #include <android/log.h>
-#define LOG_TAG "lame_utils.c"
+#include <cstdlib>
+#include <cstring>
+#define LOG_TAG "lame_utils.cpp"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 static lame_global_flags *lame = NULL;
@@ -27,31 +29,36 @@ JNIEXPORT void JNICALL Java_com_czt_mp3recorder_util_LameUtil_init(
 JNIEXPORT jint JNICALL Java_com_czt_mp3recorder_util_LameUtil_encode(
 		JNIEnv *env, jclass cls, jshortArray buffer_l, jshortArray buffer_r,
 		jint samples, jbyteArray mp3buf) {
-	jshort* j_buffer_l = (*env)->GetShortArrayElements(env, buffer_l, NULL);
+	jshort* j_buffer_l = env->GetShortArrayElements(buffer_l, NULL);
 
-	jshort* j_buffer_r = (*env)->GetShortArrayElements(env, buffer_r, NULL);
+	jshort* j_buffer_r = env->GetShortArrayElements(buffer_r, NULL);
 
-	const jsize mp3buf_size = (*env)->GetArrayLength(env, mp3buf);
-	jbyte* j_mp3buf = (*env)->GetByteArrayElements(env, mp3buf, NULL);
+	const jsize mp3buf_size = env->GetArrayLength( mp3buf);
 
-	int result = lame_encode_buffer(lame, j_buffer_l, j_buffer_r,
-			samples, j_mp3buf, mp3buf_size);
+	jbyte* j_mp3buf = env->GetByteArrayElements(mp3buf, NULL);
 
-	(*env)->ReleaseShortArrayElements(env, buffer_l, j_buffer_l, 0);
-	(*env)->ReleaseShortArrayElements(env, buffer_r, j_buffer_r, 0);
-	(*env)->ReleaseByteArrayElements(env, mp3buf, j_mp3buf, 0);
+    unsigned char* j_mp3buf_cpp = reinterpret_cast<unsigned char*>(j_mp3buf);
+
+	int result = lame_encode_buffer(lame, j_buffer_l, j_buffer_r,samples, j_mp3buf_cpp, mp3buf_size);
+
+	env->ReleaseShortArrayElements( buffer_l, j_buffer_l, 0);
+	env->ReleaseShortArrayElements( buffer_r, j_buffer_r, 0);
+	env->ReleaseByteArrayElements( mp3buf, j_mp3buf, 0);
 
 	return result;
 }
 
 JNIEXPORT jint JNICALL Java_com_czt_mp3recorder_util_LameUtil_flush(
 		JNIEnv *env, jclass cls, jbyteArray mp3buf) {
-	const jsize mp3buf_size = (*env)->GetArrayLength(env, mp3buf);
-	jbyte* j_mp3buf = (*env)->GetByteArrayElements(env, mp3buf, NULL);
+	const jsize mp3buf_size = env->GetArrayLength(mp3buf);
 
-	int result = lame_encode_flush(lame, j_mp3buf, mp3buf_size);
+	jbyte* j_mp3buf = env->GetByteArrayElements( mp3buf, NULL);
 
-	(*env)->ReleaseByteArrayElements(env, mp3buf, j_mp3buf, 0);
+    unsigned char* j_mp3buf_cpp = reinterpret_cast<unsigned char*>(j_mp3buf);
+
+	int result = lame_encode_flush(lame, j_mp3buf_cpp, mp3buf_size);
+
+	env->ReleaseByteArrayElements(mp3buf, j_mp3buf, 0);
 
 	return result;
 }
@@ -61,20 +68,20 @@ JNIEXPORT jint JNICALL Java_com_czt_mp3recorder_util_LameUtil_flush(
  */
 char* Jstring2CStr(JNIEnv* env, jstring jstr) {
     char* rtn = NULL;
-    jclass clsstring = (*env)->FindClass(env, "java/lang/String"); //String
-    jstring strencode = (*env)->NewStringUTF(env, "GB2312"); // 得到一个java字符串 "GB2312"
-    jmethodID mid = (*env)->GetMethodID(env, clsstring, "getBytes",
+    jclass clsstring = env->FindClass( "java/lang/String"); //String
+    jstring strencode = env->NewStringUTF("GB2312"); // 得到一个java字符串 "GB2312"
+    jmethodID mid = env->GetMethodID( clsstring, "getBytes",
             "(Ljava/lang/String;)[B"); //[ String.getBytes("gb2312");
-    jbyteArray barr = (jbyteArray)(*env)->CallObjectMethod(env, jstr, mid,
+    jbyteArray barr = (jbyteArray)env->CallObjectMethod( jstr, mid,
             strencode); // String .getByte("GB2312");
-    jsize alen = (*env)->GetArrayLength(env, barr); // byte数组的长度
-    jbyte* ba = (*env)->GetByteArrayElements(env, barr, JNI_FALSE);
+    jsize alen = env->GetArrayLength( barr); // byte数组的长度
+    jbyte* ba = env->GetByteArrayElements(barr, JNI_FALSE);
     if (alen > 0) {
         rtn = (char*) malloc(alen + 1); //"\0"
         memcpy(rtn, ba, alen);
         rtn[alen] = 0;
     }
-    (*env)->ReleaseByteArrayElements(env, barr, ba, 0); //
+    env->ReleaseByteArrayElements(barr, ba, 0); //
     return rtn;
 }
 
@@ -127,4 +134,10 @@ JNIEXPORT void JNICALL Java_com_czt_mp3recorder_util_LameUtil_close
 (JNIEnv *env, jclass cls) {
 	lame_close(lame);
 	lame = NULL;
+}
+
+inline int fromJByte(jbyte pixel) {
+    // cast to unsigned char re-interprets values as 0-255
+    // cast to int will make intermediate calculations safer
+    return static_cast<int>(static_cast<unsigned char>(pixel));
 }
